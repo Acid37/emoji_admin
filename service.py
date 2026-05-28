@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from src.app.plugin_system.api.llm_api import create_embedding_request, get_model_set_by_task
+from src.core.components.base.service import BaseService
 from src.kernel.logger import get_logger
 from src.kernel.vector_db import get_vector_db_service
 
@@ -30,7 +31,7 @@ class EmojiRecord:
     file_exists: bool
 
 
-class EmojiAdminService:
+class EmojiAdminService(BaseService):
     """表情包管理服务。"""
 
     service_name: str = "emoji_admin"
@@ -44,7 +45,7 @@ class EmojiAdminService:
     def __init__(self, plugin: Any) -> None:
         """初始化服务。"""
 
-        self.plugin = plugin
+        super().__init__(plugin)
 
     def _vector_db(self):
         """获取向量数据库服务。"""
