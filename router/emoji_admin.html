@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>表情包管理后台 · Neo-MoFox</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4efe7;
+      --panel: rgba(255, 251, 245, 0.84);
+      --card: rgba(255, 255, 255, 0.84);
+      --surface: rgba(255, 255, 255, 0.72);
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: rgba(148, 110, 77, 0.18);
+      --accent: #b45309;
+      --accent-strong: #7c2d12;
+      --danger: #b42318;
+      --ok: #059669;
+      --chip-surface: rgba(255, 255, 255, 0.72);
+      --chip-surface-hover: rgba(217, 119, 6, 0.12);
+      --chip-surface-active: rgba(217, 119, 6, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI Variable", "PingFang SC", "Noto Sans SC", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(217, 119, 6, 0.18), transparent 28%),
+        radial-gradient(circle at right 12% top 12%, rgba(124, 45, 18, 0.12), transparent 20%),
+        linear-gradient(135deg, #f8f4ee 0%, #efe3d1 46%, #f7efe7 100%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 20px;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background:
+        linear-gradient(135deg, rgba(217, 119, 6, 0.10), rgba(124, 45, 18, 0.05)),
+        rgba(255, 251, 245, 0.84);
+      box-shadow: 0 24px 70px rgba(109, 76, 44, 0.14);
+      margin-bottom: 16px;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), transparent 35%),
+        linear-gradient(135deg, var(--accent), var(--accent-strong));
+      box-shadow: 0 8px 20px rgba(180, 83, 9, 0.18);
+      flex: 0 0 auto;
+    }
+
+    .brand-title {
+      display: grid;
+      gap: 4px;
+    }
+
+    .brand-title h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .brand-title .subline {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .hero-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 110, 77, 0.18);
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--text);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .hero-stat b {
+      font-size: 14px;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 20px;
+      backdrop-filter: blur(22px);
+      margin-bottom: 18px;
+      position: sticky;
+      top: 12px;
+      z-index: 10;
+      box-shadow: 0 24px 70px rgba(109, 76, 44, 0.10);
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .toolbar-actions .ghost {
+      background: rgba(255, 255, 255, 0.78);
+      color: var(--text);
+      border: 1px solid rgba(148, 110, 77, 0.2);
+    }
+
+    .toolbar-actions .ghost:hover {
+      background: rgba(217, 119, 6, 0.10);
+      border-color: rgba(180, 83, 9, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .toolbar-actions .danger {
+      background: rgba(180, 35, 24, 0.12);
+      border-color: rgba(180, 35, 24, 0.18);
+      color: var(--danger);
+    }
+
+    .toolbar-actions .danger:hover {
+      background: rgba(180, 35, 24, 0.22);
+      border-color: rgba(180, 35, 24, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .toolbar-actions .danger:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .toolbar h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: .02em;
+    }
+
+    .toolbar .meta {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .main-overview {
+      display: grid;
+      gap: 14px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: .01em;
+    }
+
+    .section-meta {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 14px;
+      margin-bottom: 18px;
+      align-items: start;
+    }
+
+    .issue-panel {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,251,245,0.86), rgba(255,250,242,0.74));
+      padding: 16px 18px;
+      box-shadow: 0 16px 32px rgba(124, 45, 18, 0.10);
+      display: grid;
+      gap: 12px;
+    }
+
+    .issue-panel .panel-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .issue-panel .panel-title strong {
+      font-size: 15px;
+      letter-spacing: .02em;
+    }
+
+    .issue-panel .count {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .issue-panel .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .issue-panel .actions {
+      margin-top: 2px;
+    }
+
+    .issue-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .issue-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.72);
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .issue-item .name {
+      font-size: 13px;
+      word-break: break-all;
+    }
+
+    .issue-item .state {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .summary-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255,251,245,0.86), rgba(255,250,242,0.74));
+      padding: 16px 18px;
+      box-shadow: 0 16px 32px rgba(124, 45, 18, 0.10);
+    }
+
+    .summary-card .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .summary-card .value {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+
+    .summary-card .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+      max-width: 640px;
+      justify-content: flex-end;
+    }
+
+    .search-row input,
+    .editor input,
+    .editor textarea {
+      width: 100%;
+      border: 1px solid rgba(148, 110, 77, 0.28);
+      background: rgba(255, 255, 255, 0.80);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 10px 12px;
+      outline: none;
+    }
+
+    .search-row input:focus,
+    .editor input:focus,
+    .editor textarea:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      font-family: inherit;
+      border: 1px solid rgba(148, 110, 77, 0.22);
+      background: rgba(255, 251, 245, 0.90);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 9px 15px;
+      cursor: pointer;
+      font-size: 13px;
+      transition: .2s ease;
+      box-shadow: 0 2px 8px rgba(109, 76, 44, 0.06);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(109, 76, 44, 0.12);
+      border-color: rgba(180, 83, 9, 0.38);
+      background: rgba(255, 251, 245, 0.98);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 1px 4px rgba(109, 76, 44, 0.08);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .search-row input::placeholder,
+    .editor input::placeholder,
+    .editor textarea::placeholder {
+      color: #a08060;
+    }
+
+    .search-row button,
+    .editor button,
+    .chip,
+    .tag {
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      background: var(--chip-surface);
+      color: var(--text);
+      border-radius: 14px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+
+    .search-row button:hover,
+    .editor button:hover,
+    .chip:hover,
+    .tag:hover {
+      transform: translateY(-1px);
+      border-color: rgba(180, 83, 9, 0.45);
+      background: var(--chip-surface-hover);
+    }
+
+    .search-row button.primary,
+    .editor button.primary,
+    .actions button.primary {
+      background: rgba(180, 83, 9, 0.14);
+      border-color: rgba(180, 83, 9, 0.28);
+    }
+
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+
+    .chip.active {
+      background: var(--chip-surface-active);
+      border-color: rgba(180, 83, 9, 0.48);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    .grid.landscape {
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+
+    .grid.landscape .card {
+      flex-direction: row;
+      height: 120px;
+    }
+
+    .grid.landscape .card img {
+      width: 120px;
+      height: 120px;
+      flex-shrink: 0;
+    }
+
+    .grid.landscape .card-body {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--card);
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(109, 76, 44, 0.08);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .card.selected {
+      border-color: rgba(180, 83, 9, 0.5);
+      box-shadow: 0 8px 24px rgba(180, 83, 9, 0.12);
+    }
+
+    .card-check {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .card img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      background: rgba(237, 227, 211, 0.80);
+      display: block;
+    }
+
+    .card-body {
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .card-meta {
+      font-size: 12px;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 4px;
+    }
+
+    .view-toggle button {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    .view-toggle button.active {
+      background: var(--chip-surface-hover);
+      border-color: rgba(180, 83, 9, 0.4);
+    }
+
+    .toolbar-actions button.ghost {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(180, 83, 9, 0.12);
+      border: 1px solid rgba(180, 83, 9, 0.22);
+      color: var(--text);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .hint-box {
+      margin-top: 8px;
+      padding: 8px 10px;
+      background: rgba(180, 83, 9, 0.08);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      padding: 6px 10px;
+      font-size: 12px;
+      cursor: default;
+    }
+
+    .actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .actions button {
+      padding: 6px 10px;
+      font-size: 12px;
+    }
+
+    .actions button.danger {
+      background: rgba(180, 35, 24, 0.08);
+      border-color: rgba(180, 35, 24, 0.22);
+      color: var(--danger);
+    }
+
+    .actions button.danger:hover {
+      background: rgba(180, 35, 24, 0.16);
+      border-color: rgba(180, 35, 24, 0.40);
+      box-shadow: 0 6px 16px rgba(180, 35, 24, 0.14);
+    }
+
+    .actions button.primary {
+      background: rgba(180, 83, 9, 0.12);
+      border-color: rgba(180, 83, 9, 0.32);
+      color: var(--accent);
+    }
+
+    .actions button.primary:hover {
+      background: rgba(180, 83, 9, 0.22);
+      border-color: rgba(180, 83, 9, 0.50);
+      box-shadow: 0 6px 16px rgba(180, 83, 9, 0.14);
+    }
+
+    .empty {
+      padding: 80px 20px;
+      text-align: center;
+      color: var(--muted);
+      border: 1px dashed rgba(148, 110, 77, 0.25);
+      border-radius: 18px;
+      background: rgba(255, 251, 245, 0.60);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(109, 76, 44, 0.55);
+      backdrop-filter: blur(12px);
+      z-index: 50;
+      padding: 24px;
+    }
+
+    .overlay.show { display: flex; }
+
+    .modal {
+      width: min(920px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: rgba(255, 251, 245, 0.97);
+      box-shadow: 0 18px 56px rgba(109, 76, 44, 0.25);
+      padding: 20px;
+    }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+    }
+
+    .preview {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      background: rgba(237, 227, 211, 0.60);
+    }
+
+    .preview img {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-height: 72vh;
+      object-fit: contain;
+    }
+
+    .editor {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .editor textarea {
+      min-height: 180px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .editor .tag-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 251, 245, 0.80);
+      min-height: 58px;
+    }
+
+    .editor .tag-picker .tag.active {
+      background: rgba(180, 83, 9, 0.18);
+      border-color: rgba(180, 83, 9, 0.45);
+    }
+
+    .footer-note {
+      color: var(--muted);
+      margin-top: 16px;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .topline-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .topline-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--accent-strong);
+    }
+
+    .topline .subtitle {
+      color: var(--muted);
+      margin-top: 0;
+      font-size: 13px;
+    }
+
+    .close-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.6);
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .close-btn:hover {
+      background: rgba(180, 35, 24, 0.12);
+      border-color: rgba(180, 35, 24, 0.3);
+      color: var(--danger);
+    }
+
+    .status-bar {
+      text-align: center;
+      padding: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .status-bar.error {
+      color: var(--danger);
+      background: rgba(180, 35, 24, 0.08);
+      border-radius: 8px;
+    }
+
+    .operation-msg {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 9999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      white-space: nowrap;
+    }
+
+    .operation-msg.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .operation-msg.error {
+      background: var(--danger);
+    }
+
+    @media (max-width: 900px) {
+      .modal-grid { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .search-row { max-width: none; justify-content: stretch; }
+      .search-row button { width: 120px; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dashboard { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .summary { grid-template-columns: 1fr; }
+      .topline { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app">
+    <section class="hero">
+      <div class="brand-title">
+        <h1>表情包管理后台</h1>
+        <div class="subline">Neo-MoFox · 独立对接插件 · 不碰原始发送逻辑</div>
+        <div class="subline">同步说明：{{ syncInfoText }}</div>
+      </div>
+      <div class="hero-stats">
+        <span class="hero-stat"><b>{{ memeCount }}</b> 张表情包</span>
+        <span class="hero-stat"><b>{{ tagCount }}</b> 个标签</span>
+        <span class="hero-stat"><b>{{ syncIntervalLabel }}</b> 同步周期</span>
+        <span class="hero-stat"><b>{{ activeTag || '全部' }}</b> 当前筛选</span>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div>
+        <h1>表情包管理后台</h1>
+        <div class="meta">支持图片预览、描述修改、Tag 编辑和删除</div>
+      </div>
+      <div class="toolbar-actions">
+        <button class="ghost" @click="loadMemes" :disabled="loading">
+          {{ loading ? '刷新中…' : '刷新' }}
+        </button>
+        <div class="view-toggle">
+          <button class="ghost" :class="{ active: viewMode === 'square' }" @click="viewMode = 'square'">方图</button>
+          <button class="ghost" :class="{ active: viewMode === 'landscape' }" @click="viewMode = 'landscape'">横图</button>
+        </div>
+        <button class="ghost" @click="selectVisibleMemes">全选当前页</button>
+        <button class="ghost" @click="clearSelection">清空选择</button>
+        <button class="danger" @click="batchDeleteSelected" :disabled="!selectedIds.length">批量删除 ({{ selectedIds.length }})</button>
+      </div>
+    </div>
+
+    <div class="status-bar" :class="{ error: loadError }">
+      {{ loadError || '后台已准备就绪' }}
+    </div>
+    <div class="operation-msg" :class="{ show: operationMessage, error: operationMessage?.startsWith('❌') }">
+      {{ operationMessage }}
+    </div>
+
+    <div class="dashboard">
+      <div class="main-overview">
+        <div class="section-head">
+          <h2>总览</h2>
+          <div class="section-meta">支持预览 · 标签编辑 · 描述修改</div>
+        </div>
+        <div class="summary">
+          <div class="summary-card">
+            <div class="label">表情包总数</div>
+            <div class="value">{{ memeCount }}</div>
+            <div class="hint">按 meme_id 聚合后的卡片数</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">标签总量</div>
+            <div class="value">{{ tagCount }}</div>
+            <div class="hint">所有聚合记录里的 tag 数量</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">当前筛选</div>
+            <div class="value">{{ activeTag || '全部' }}</div>
+            <div class="hint">关键词：{{ keyword.trim() || '无' }}</div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="issue-panel" v-if="missingCount > 0">
+        <div class="panel-title">
+          <strong>文件状态</strong>
+          <span class="status-pill">{{ missingCount }} 条</span>
+        </div>
+        <div class="count">{{ missingCount }}</div>
+        <div class="hint">
+          这里只单独列出“记录存在，但本地图片暂时找不到”的项目，方便按需检查，不会打扰主列表。
+          如果只是还没同步，请等到页面提示的下次刷新时间再看。
+        </div>
+        <div class="summary-card" style="padding: 12px 14px;">
+          <div class="label">下次刷新</div>
+          <div class="value" style="font-size: 20px;">{{ nextRefreshLabel }}</div>
+          <div class="hint">基于当前部署配置和本机本地时间动态计算</div>
+        </div>
+        <div class="actions">
+          <button class="chip" :class="{ active: showOnlyBrokenFiles }" @click="toggleBrokenFilesOnly">
+            {{ showOnlyBrokenFiles ? '取消只看异常' : '只看文件异常' }}
+          </button>
+        </div>
+        <div class="issue-list" v-if="brokenPreviewMemes.length">
+          <div class="issue-item" v-for="item in brokenPreviewMemes" :key="item.meme_id">
+            <div class="name">{{ item.meme_id }}</div>
+            <div class="state">待确认</div>
+          </div>
+        </div>
+        <div v-else class="hint">当前没有异常项，挺好，页面可以稍微松一口气。</div>
+      </aside>
+    </div>
+
+    <div class="filters" v-if="availableTags.length">
+      <button class="chip" :class="{ active: activeTag === '' }" @click="setActiveTag('')">全部</button>
+      <button
+        v-for="tag in availableTags"
+        :key="tag"
+        class="chip"
+        :class="{ active: activeTag === tag }"
+        @click="setActiveTag(tag)"
+      >
+        {{ tag }}
+      </button>
+    </div>
+
+    <div v-if="loading" class="empty">正在加载表情包……</div>
+    <div v-else-if="!visibleMemes.length" class="empty">
+      <div v-if="showOnlyBrokenFiles">
+        当前没有文件异常的表情包。
+        <br />
+        如果你是刚启动系统，请在 <strong>{{ nextRefreshLabel }}</strong> 后再刷新看看。
+      </div>
+      <div v-else>
+        没有找到表情包，或者当前过滤条件太严格了。
+        <br />
+        如果只是还没同步，请在 <strong>{{ nextRefreshLabel }}</strong> 后刷新页面。
+      </div>
+    </div>
+
+    <div v-else class="grid" :class="viewMode">
+      <article class="card" v-for="item in visibleMemes" :key="item.meme_id">
+        <input
+          class="card-check"
+          type="checkbox"
+          :checked="selectedIds.includes(item.meme_id)"
+          @change="toggleSelected(item.meme_id)"
+          @click.stop
+          aria-label="选择表情包"
+        />
+        <img :src="imageUrl(item.meme_id)" :alt="item.meme_id" loading="lazy" />
+        <div class="card-body">
+          <div class="card-meta">
+            <div class="muted">{{ item.record_count }} 条记录 · {{ item.file_exists ? '正常' : '异常' }}</div>
+          </div>
+          <div class="tag-list">
+            <span class="tag" v-for="tag in item.tags" :key="item.meme_id + ':' + tag">{{ tag }}</span>
+          </div>
+          <div class="actions">
+            <button class="primary" @click="openEditor(item)">编辑</button>
+            <button class="danger" @click="removeItem(item)">删除</button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="overlay" :class="{ show: editorOpen }" @click.self="closeEditor">
+      <div class="modal">
+        <div class="topline" v-if="editingItem">
+          <div class="topline-title">
+            <div class="topline-name">编辑表情包</div>
+            <div class="subtitle">修改描述与标签后会自动重建向量记录</div>
+          </div>
+          <button class="close-btn" @click="closeEditor" aria-label="关闭">✕</button>
+        </div>
+        <div class="modal-grid" v-if="editingItem">
+          <div class="preview">
+            <img :src="imageUrl(editingItem.meme_id)" :alt="editingItem.meme_id" />
+          </div>
+          <div class="editor">
+            <label>
+              <div class="muted" style="margin-bottom: 6px;">描述</div>
+              <textarea v-model="editDescription" placeholder="请输入新的描述"></textarea>
+              <div class="hint-box">💡 其实描述基本没人看啦，发表情包靠的是 Tag 搜索，所以重点还是要把标签打准确～</div>
+            </label>
+            <label>
+              <div class="muted" style="margin-bottom: 6px;">标签</div>
+              <div class="tag-picker">
+                <button
+                  v-for="tag in availableTags"
+                  :key="'preset-' + tag"
+                  class="tag"
+                  :class="{ active: editTags.includes(tag) }"
+                  @click.prevent="toggleTag(tag)"
+                >
+                  {{ tag }}
+                </button>
+              </div>
+            </label>
+            <label>
+              <div class="muted" style="margin-bottom: 6px;">自定义标签（逗号分隔）</div>
+              <input v-model="customTagInput" type="text" placeholder="比如：可爱, 小黄脸, 猫猫" />
+            </label>
+            <div class="actions">
+              <button class="primary" @click="saveItem">保存修改</button>
+              <button @click="closeEditor">取消</button>
+            </div>
+            <div class="footer-note">
+              保存后会重建该表情包的向量记录；删除会移除同一 meme_id 对应的所有 tag 记录和图片文件。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          loading: false,
+          memes: [],
+          availableTags: [],
+          syncInfo: null,
+          keyword: '',
+          activeTag: '',
+          editorOpen: false,
+          editingItem: null,
+          editDescription: '',
+          editTags: [],
+          customTagInput: '',
+          selectedIds: [],
+          showOnlyBrokenFiles: false,
+          loadError: '',
+          operationMessage: '',
+          viewMode: 'square',
+        };
+      },
+      computed: {
+        memeCount() {
+          return this.memes.length;
+        },
+        tagCount() {
+          return this.memes.reduce((total, item) => total + (Array.isArray(item.tags) ? item.tags.length : 0), 0);
+        },
+        missingCount() {
+          return this.memes.filter((item) => !item.file_exists).length;
+        },
+        selectedCount() {
+          return this.selectedIds.length;
+        },
+        syncIntervalLabel() {
+          const interval = this.syncInfo?.interval_seconds;
+          return interval ? `${interval}s` : '未知';
+        },
+        syncInfoText() {
+          const info = this.syncInfo;
+          if (!info) {
+            return '同步说明暂不可用，请稍后刷新页面。';
+          }
+          if (info.refresh_hint) {
+            const currentTime = info.current_time ? `当前本地时间 ${info.current_time}；` : '';
+            return `${currentTime}${info.refresh_hint}（配置来源：${info.config_path}）`;
+          }
+          return `已读取配置文件 ${info.config_path}，但未拿到有效的 interval_seconds。`;
+        },
+        nextRefreshLabel() {
+          const nextRefreshAt = this.syncInfo?.next_refresh_at;
+          return nextRefreshAt || '未知';
+        },
+        brokenPreviewMemes() {
+          return this.memes.filter((item) => !item.file_exists).slice(0, 5);
+        },
+        visibleMemes() {
+          const keyword = this.keyword.trim().toLowerCase();
+          const activeTag = this.activeTag.trim();
+          return this.memes.filter((item) => {
+            if (this.showOnlyBrokenFiles && item.file_exists) {
+              return false;
+            }
+            const tagMatch = !activeTag || item.tags.includes(activeTag);
+            if (!tagMatch) return false;
+            if (!keyword) return true;
+            const haystack = [item.meme_id, item.description, item.path, ...(item.tags || [])].join(' ').toLowerCase();
+            return haystack.includes(keyword);
+          });
+        },
+      },
+      methods: {
+        apiUrl(path) {
+          return `./api${path}`;
+        },
+        imageUrl(memeId) {
+          return this.apiUrl(`/image/${encodeURIComponent(memeId)}`);
+        },
+        async loadMemesWithRetry(retries = 3, delay = 500) {
+          this.loading = true;
+          let lastError;
+          try {
+            for (let attempt = 1; attempt <= retries; attempt++) {
+              try {
+                const resp = await fetch(this.apiUrl(`/memes?keyword=${encodeURIComponent(this.keyword.trim())}`));
+                if (!resp.ok) {
+                  throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+                }
+                const data = await resp.json();
+                this.memes = Array.isArray(data.memes) ? data.memes : [];
+                this.availableTags = Array.isArray(data.available_tags) ? data.available_tags : [];
+                this.syncInfo = data.sync_info || null;
+                return;
+              } catch (error) {
+                lastError = error;
+                console.warn(`加载尝试 ${attempt}/${retries} 失败:`, error.message || String(error));
+                if (attempt < retries) {
+                  await new Promise((r) => setTimeout(r, delay * attempt));
+                }
+              }
+            }
+            console.error('加载最终失败:', lastError);
+            this.loadError = `加载失败：${lastError.message || String(lastError)}`;
+          } finally {
+            this.loading = false;
+          }
+        },
+        async loadMemes() {
+          this.loadError = '';
+          await this.loadMemesWithRetry();
+        },
+        async reloadAll() {
+          this.keyword = '';
+          this.activeTag = '';
+          this.selectedIds = [];
+          await this.loadMemes();
+        },
+        setActiveTag(tag) {
+          this.activeTag = tag;
+        },
+        toggleBrokenFilesOnly() {
+          this.showOnlyBrokenFiles = !this.showOnlyBrokenFiles;
+        },
+        toggleSelected(memeId) {
+          if (this.selectedIds.includes(memeId)) {
+            this.selectedIds = this.selectedIds.filter((item) => item !== memeId);
+          } else {
+            this.selectedIds = [...this.selectedIds, memeId];
+          }
+        },
+        selectVisibleMemes() {
+          this.selectedIds = [...new Set([...this.selectedIds, ...this.visibleMemes.map((item) => item.meme_id)])];
+        },
+        clearSelection() {
+          this.selectedIds = [];
+        },
+        openEditor(item) {
+          this.editingItem = item;
+          this.editDescription = item.description || '';
+          this.editTags = Array.isArray(item.tags) ? [...item.tags] : [];
+          this.customTagInput = '';
+          this._originalTags = [...this.editTags];
+          this._originalDesc = this.editDescription;
+          this.editorOpen = true;
+        },
+        _isDirty() {
+          return this.editDescription !== this._originalDesc ||
+                 JSON.stringify([...this.editTags].sort()) !== JSON.stringify([...this._originalTags].sort());
+        },
+        closeEditor() {
+          if (this._isDirty()) {
+            this._showOpMsg('修改已丢弃，未保存', true);
+          }
+          this.editorOpen = false;
+          this.editingItem = null;
+          this.editDescription = '';
+          this.editTags = [];
+          this.customTagInput = '';
+        },
+        _showOpMsg(msg, isError = false) {
+          this.operationMessage = isError ? '❌ ' + msg : msg;
+          if (this._opTimer) clearTimeout(this._opTimer);
+          this._opTimer = setTimeout(() => {
+            this.operationMessage = '';
+          }, 2500);
+        },
+        toggleTag(tag) {
+          if (this.editTags.includes(tag)) {
+            this.editTags = this.editTags.filter((item) => item !== tag);
+          } else {
+            this.editTags = [...this.editTags, tag];
+          }
+        },
+        mergeCustomTags() {
+          const extra = this.customTagInput
+            .split(/[,，\n]/)
+            .map((item) => item.trim())
+            .filter(Boolean);
+          const merged = [...this.editTags];
+          for (const tag of extra) {
+            if (!merged.includes(tag)) {
+              merged.push(tag);
+            }
+          }
+          return merged;
+        },
+        async saveItem() {
+          if (!this.editingItem) return;
+          const description = this.editDescription.trim();
+          const tags = this.mergeCustomTags();
+          if (!description) {
+            this._showOpMsg('描述不能为空', true);
+            return;
+          }
+          if (!tags.length) {
+            this._showOpMsg('至少保留一个标签', true);
+            return;
+          }
+
+          try {
+            const resp = await fetch(this.apiUrl(`/memes/${encodeURIComponent(this.editingItem.meme_id)}`), {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ description, tags }),
+            });
+            if (!resp.ok) {
+              const detail = await resp.text();
+              throw new Error(detail || '保存失败');
+            }
+            await this.loadMemes();
+            this.closeEditor();
+            this._showOpMsg('✅ 保存成功');
+          } catch (error) {
+            console.error(error);
+            this._showOpMsg(`保存失败：${error.message || error}`, true);
+          }
+        },
+        async removeItem(item) {
+          if (!confirm(`确定删除 ${item.meme_id} 吗？`)) return;
+          try {
+            const resp = await fetch(this.apiUrl(`/memes/${encodeURIComponent(item.meme_id)}`), {
+              method: 'DELETE',
+            });
+            if (!resp.ok) {
+              const detail = await resp.text();
+              throw new Error(detail || '删除失败');
+            }
+            await this.loadMemes();
+            this._showOpMsg('✅ 删除成功');
+          } catch (error) {
+            console.error(error);
+            this._showOpMsg(`删除失败：${error.message || error}`, true);
+          }
+        },
+        async batchDeleteSelected() {
+          if (!this.selectedIds.length) return;
+          if (!confirm(`确定批量删除 ${this.selectedIds.length} 个表情包吗？`)) return;
+          try {
+            const resp = await fetch(this.apiUrl(`/memes`), {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ meme_ids: this.selectedIds }),
+            });
+            if (!resp.ok) {
+              const detail = await resp.text();
+              throw new Error(detail || '批量删除失败');
+            }
+            this.selectedIds = [];
+            await this.loadMemes();
+            this._showOpMsg('✅ 批量删除成功');
+          } catch (error) {
+            console.error(error);
+            this._showOpMsg(`批量删除失败：${error.message || error}`, true);
+          }
+        },
+        async copyText(text) {
+          try {
+            await navigator.clipboard.writeText(text);
+            this._showOpMsg('✅ 已复制 ID');
+          } catch (error) {
+            this._showOpMsg('复制失败', true);
+          }
+        },
+      },
+      mounted() {
+        this.loadMemes();
+      },
+    }).mount('#app');
+  </script>
+</body>
+</html>
