@@ -10,7 +10,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
-from src.app.plugin_system.api.llm_api import create_embedding_request, get_model_set_by_task
+from src.app.plugin_system.api.llm_api import (
+    create_embedding_request,
+    get_model_set_by_task,
+)
 from src.core.components.base.service import BaseService
 from src.kernel.logger import get_logger
 from src.kernel.vector_db import get_vector_db_service
@@ -133,8 +136,12 @@ class EmojiAdminService(BaseService):
             metadatas_raw = data.get("metadatas")
             embeddings_raw = data.get("embeddings")
             ids: list[str] = list(ids_raw) if ids_raw is not None else []
-            metadatas: list[dict[str, Any]] = list(metadatas_raw) if metadatas_raw is not None else []
-            embeddings: list[list[float]] = list(embeddings_raw) if embeddings_raw is not None else []
+            metadatas: list[dict[str, Any]] = (
+                list(metadatas_raw) if metadatas_raw is not None else []
+            )
+            embeddings: list[list[float]] = (
+                list(embeddings_raw) if embeddings_raw is not None else []
+            )
             if not ids:
                 break
 
@@ -175,9 +182,13 @@ class EmojiAdminService(BaseService):
                 },
             )
             group["record_count"] += 1
-            group["description"] = group["description"] or self._normalize_text(metadata.get("description"))
+            group["description"] = group["description"] or self._normalize_text(
+                metadata.get("description")
+            )
             group["path"] = group["path"] or self._normalize_text(metadata.get("path"))
-            group["created_at"] = max(group["created_at"], float(metadata.get("created_at") or 0.0))
+            group["created_at"] = max(
+                group["created_at"], float(metadata.get("created_at") or 0.0)
+            )
 
             tag = self._normalize_text(metadata.get("tag"))
             if tag and tag not in group["tags"]:
@@ -230,7 +241,9 @@ class EmojiAdminService(BaseService):
             "file_exists": item.file_exists,
         }
 
-    async def _get_meme_vector_data(self, meme_id: str) -> tuple[list[dict[str, Any]], list[list[float]]]:
+    async def _get_meme_vector_data(
+        self, meme_id: str
+    ) -> tuple[list[dict[str, Any]], list[list[float]]]:
         """读取单个 meme_id 对应的向量库数据。"""
 
         vdb = self._vector_db()
@@ -242,15 +255,24 @@ class EmojiAdminService(BaseService):
         )
         metadatas_raw = data.get("metadatas")
         embeddings_raw = data.get("embeddings")
-        metadatas: list[dict[str, Any]] = list(metadatas_raw) if metadatas_raw is not None else []
-        embeddings: list[list[float]] = list(embeddings_raw) if embeddings_raw is not None else []
+        metadatas: list[dict[str, Any]] = (
+            list(metadatas_raw) if metadatas_raw is not None else []
+        )
+        embeddings: list[list[float]] = (
+            list(embeddings_raw) if embeddings_raw is not None else []
+        )
         return metadatas, embeddings
 
-    def _build_detail_from_metadatas(self, metadatas: list[dict[str, Any]]) -> dict[str, Any] | None:
+    def _build_detail_from_metadatas(
+        self, metadatas: list[dict[str, Any]]
+    ) -> dict[str, Any] | None:
         """从元数据聚合出单条表情包详情。"""
 
         records = self._aggregate_records(
-            [{"id": str(index), "metadata": metadata} for index, metadata in enumerate(metadatas)]
+            [
+                {"id": str(index), "metadata": metadata}
+                for index, metadata in enumerate(metadatas)
+            ]
         )
         if not records:
             return None
@@ -261,10 +283,14 @@ class EmojiAdminService(BaseService):
     def _matches_keyword(item: EmojiRecord, keyword: str) -> bool:
         """判断单条记录是否匹配关键词。"""
 
-        haystack = " ".join([item.meme_id, item.description, item.path, " ".join(item.tags)]).lower()
+        haystack = " ".join(
+            [item.meme_id, item.description, item.path, " ".join(item.tags)]
+        ).lower()
         return keyword in haystack
 
-    def _filter_records(self, records: list[EmojiRecord], keyword: str | None) -> list[EmojiRecord]:
+    def _filter_records(
+        self, records: list[EmojiRecord], keyword: str | None
+    ) -> list[EmojiRecord]:
         """按关键词过滤聚合记录。"""
 
         query = self._normalize_text(keyword).lower()
@@ -302,7 +328,9 @@ class EmojiAdminService(BaseService):
             available_tags = []
             latest_sync_ts = None
 
-        return await self._build_dashboard_payload(memes, available_tags, latest_sync_ts)
+        return await self._build_dashboard_payload(
+            memes, available_tags, latest_sync_ts
+        )
 
     async def list_all_memes(self, keyword: str | None = None) -> list[dict[str, Any]]:
         """列出所有表情包并可选按关键词过滤。"""
@@ -329,7 +357,9 @@ class EmojiAdminService(BaseService):
         return self._get_latest_sync_timestamp_from_rows(rows)
 
     @staticmethod
-    def _get_latest_sync_timestamp_from_rows(rows: list[dict[str, Any]]) -> float | None:
+    def _get_latest_sync_timestamp_from_rows(
+        rows: list[dict[str, Any]],
+    ) -> float | None:
         """从已拉取的记录中提取最近一次同步时间戳。"""
 
         latest_ts: float | None = None
@@ -381,7 +411,9 @@ class EmojiAdminService(BaseService):
             )
         return f"当前未找到同步记录；如果刚启动且暂未同步，可在 {next_refresh_text} 刷新查看。"
 
-    async def get_sync_info(self, latest_sync_ts: float | None = None) -> dict[str, Any]:
+    async def get_sync_info(
+        self, latest_sync_ts: float | None = None
+    ) -> dict[str, Any]:
         """获取 emoji_sender 当前部署的同步信息。"""
 
         interval_seconds = self._load_sender_interval_seconds()
@@ -393,17 +425,29 @@ class EmojiAdminService(BaseService):
             except Exception as exc:
                 logger.error(f"读取 emoji_admin 最近同步时间失败: {exc}")
                 latest_sync_ts = None
-        latest_sync_at = datetime.fromtimestamp(latest_sync_ts).astimezone() if latest_sync_ts else None
+        latest_sync_at = (
+            datetime.fromtimestamp(latest_sync_ts).astimezone()
+            if latest_sync_ts
+            else None
+        )
 
-        next_refresh_at = self._build_next_refresh_at(interval_seconds, now_local, latest_sync_at)
-        refresh_hint = self._build_refresh_hint(interval_seconds, latest_sync_at, next_refresh_at)
+        next_refresh_at = self._build_next_refresh_at(
+            interval_seconds, now_local, latest_sync_at
+        )
+        refresh_hint = self._build_refresh_hint(
+            interval_seconds, latest_sync_at, next_refresh_at
+        )
 
         return {
             "config_path": str(config_path),
             "interval_seconds": interval_seconds,
             "current_time": self._format_local_datetime(now_local),
-            "latest_sync_at": self._format_local_datetime(latest_sync_at) if latest_sync_at else None,
-            "next_refresh_at": self._format_local_datetime(next_refresh_at) if next_refresh_at else None,
+            "latest_sync_at": self._format_local_datetime(latest_sync_at)
+            if latest_sync_at
+            else None,
+            "next_refresh_at": self._format_local_datetime(next_refresh_at)
+            if next_refresh_at
+            else None,
             "refresh_hint": refresh_hint,
             "startup_immediate_ingest": True,
             "schedule_mode": "startup_once_plus_interval",
@@ -427,7 +471,10 @@ class EmojiAdminService(BaseService):
             return False
 
         vdb = self._vector_db()
-        await vdb.delete(collection_name=self.collection_name, where={"meme_id": self._normalize_text(meme_id)})
+        await vdb.delete(
+            collection_name=self.collection_name,
+            where={"meme_id": self._normalize_text(meme_id)},
+        )
 
         await self._delete_file_if_exists(self._normalize_text(detail.get("path")))
         return True
@@ -465,7 +512,9 @@ class EmojiAdminService(BaseService):
             "failed": failed,
         }
 
-    async def update_meme(self, meme_id: str, description: str, tags: list[str]) -> bool:
+    async def update_meme(
+        self, meme_id: str, description: str, tags: list[str]
+    ) -> bool:
         """更新表情包描述与标签。"""
 
         meme_id = self._normalize_text(meme_id)
@@ -502,7 +551,9 @@ class EmojiAdminService(BaseService):
         else:
             embedding = list(embeddings[0])
 
-        await vdb.delete(collection_name=self.collection_name, where={"meme_id": meme_id})
+        await vdb.delete(
+            collection_name=self.collection_name, where={"meme_id": meme_id}
+        )
 
         ids: list[str] = []
         embedded: list[list[float]] = []

@@ -27,7 +27,9 @@ class EmojiUpdatePayload(BaseModel):
 class EmojiBatchDeletePayload(BaseModel):
     """表情包批量删除请求体。"""
 
-    meme_ids: list[str] = Field(default_factory=list, description="需要删除的表情包 ID 列表")
+    meme_ids: list[str] = Field(
+        default_factory=list, description="需要删除的表情包 ID 列表"
+    )
 
 
 class EmojiAdminRouter(BaseRouter):
@@ -82,7 +84,9 @@ class EmojiAdminRouter(BaseRouter):
             return resp
 
         @self.app.get("/api/memes")
-        async def list_memes(keyword: str | None = Query(default=None, description="关键词过滤")) -> dict[str, Any]:
+        async def list_memes(
+            keyword: str | None = Query(default=None, description="关键词过滤"),
+        ) -> dict[str, Any]:
             """列出所有表情包。"""
 
             return await self._get_service().get_dashboard_payload(keyword=keyword)
@@ -97,16 +101,24 @@ class EmojiAdminRouter(BaseRouter):
             return detail
 
         @self.app.get("/api/image/{meme_id}")
-        async def get_image(meme_id: str) -> FileResponse:
+        async def get_image(
+            meme_id: str,
+            download: bool = Query(default=False, description="是否触发下载"),
+        ) -> FileResponse:
             """返回表情包图片。"""
 
             path = await self._get_service().get_preview_path(meme_id)
             if path is None:
                 raise HTTPException(status_code=404, detail="表情包不存在")
+            if download:
+                filename = Path(path).name or f"{meme_id}.png"
+                return FileResponse(path, filename=filename)
             return FileResponse(path)
 
         @self.app.put("/api/memes/{meme_id}")
-        async def update_meme(meme_id: str, payload: EmojiUpdatePayload) -> dict[str, Any]:
+        async def update_meme(
+            meme_id: str, payload: EmojiUpdatePayload
+        ) -> dict[str, Any]:
             """更新表情包的描述与标签。"""
 
             ok = await self._get_service().update_meme(

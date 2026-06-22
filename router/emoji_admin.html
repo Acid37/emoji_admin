@@ -139,6 +139,37 @@
       justify-content: flex-end;
     }
 
+    .search-input-wrap {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 240px;
+      border: 1px solid rgba(148, 110, 77, 0.28);
+      background: rgba(255, 255, 255, 0.80);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 9px 12px;
+      outline: none;
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+    }
+
+    .search-input::placeholder {
+      color: #a08060;
+    }
+
+    @media (max-width: 640px) {
+      .search-input { width: 100%; }
+    }
+
     .toolbar-actions .ghost {
       background: rgba(255, 255, 255, 0.78);
       color: var(--text);
@@ -309,15 +340,6 @@
       font-size: 12px;
     }
 
-    .search-row {
-      display: flex;
-      gap: 10px;
-      flex: 1;
-      max-width: 640px;
-      justify-content: flex-end;
-    }
-
-    .search-row input,
     .editor input,
     .editor textarea {
       width: 100%;
@@ -329,7 +351,6 @@
       outline: none;
     }
 
-    .search-row input:focus,
     .editor input:focus,
     .editor textarea:focus {
       border-color: var(--accent);
@@ -367,13 +388,11 @@
       box-shadow: none;
     }
 
-    .search-row input::placeholder,
     .editor input::placeholder,
     .editor textarea::placeholder {
       color: #a08060;
     }
 
-    .search-row button,
     .editor button,
     .chip,
     .tag {
@@ -386,7 +405,6 @@
       transition: .18s ease;
     }
 
-    .search-row button:hover,
     .editor button:hover,
     .chip:hover,
     .tag:hover {
@@ -395,7 +413,6 @@
       background: var(--chip-surface-hover);
     }
 
-    .search-row button.primary,
     .editor button.primary,
     .actions button.primary {
       background: rgba(180, 83, 9, 0.14);
@@ -426,18 +443,20 @@
 
     .grid.landscape .card {
       flex-direction: row;
-      height: 120px;
+      align-items: stretch;
     }
 
     .grid.landscape .card img {
       width: 120px;
-      height: 120px;
+      height: auto;
+      min-height: 100%;
       flex-shrink: 0;
+      object-fit: cover;
     }
 
     .grid.landscape .card-body {
       flex: 1;
-      overflow: hidden;
+      min-width: 0;  /* 防止 flex 子项溢出 */
     }
 
     .card {
@@ -483,6 +502,24 @@
 
     .card-meta {
       font-size: 12px;
+    }
+
+    .card-description {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: break-all;
+    }
+
+    /* 横图模式空间更大，允许 3 行 */
+    .grid.landscape .card-description {
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
     }
 
     .view-toggle {
@@ -581,6 +618,16 @@
       background: rgba(180, 83, 9, 0.22);
       border-color: rgba(180, 83, 9, 0.50);
       box-shadow: 0 6px 16px rgba(180, 83, 9, 0.14);
+    }
+
+    /* 下载按钮：复用 .actions button 的尺寸，让 <a> 视觉上像按钮 */
+    .actions a.download-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      font-size: 12px;
+      text-decoration: none;
+      line-height: 1.2;
     }
 
     .empty {
@@ -763,8 +810,6 @@
     @media (max-width: 900px) {
       .modal-grid { grid-template-columns: 1fr; }
       .toolbar { flex-direction: column; align-items: stretch; }
-      .search-row { max-width: none; justify-content: stretch; }
-      .search-row button { width: 120px; }
       .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .dashboard { grid-template-columns: 1fr; }
     }
@@ -772,6 +817,39 @@
     @media (max-width: 640px) {
       .summary { grid-template-columns: 1fr; }
       .topline { flex-direction: column; align-items: flex-start; }
+
+      /* Hero: 改为纵向堆叠，避免统计徽章挤压 */
+      .hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .hero-stats {
+        justify-content: flex-start;
+        width: 100%;
+      }
+      .hero-stat {
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+
+      /* 卡片 actions: 4 个按钮在小屏换行，按钮缩小 */
+      .actions {
+        flex-wrap: wrap;
+      }
+      .actions button,
+      .actions a.download-btn {
+        flex: 1 1 calc(50% - 6px);
+        min-width: 60px;
+        text-align: center;
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      /* 模态框: 贴边显示 */
+      .modal {
+        padding: 14px;
+        max-height: 95vh;
+      }
     }
   </style>
 </head>
@@ -797,6 +875,16 @@
         <div class="meta">支持图片预览、描述修改、Tag 编辑和删除</div>
       </div>
       <div class="toolbar-actions">
+        <div class="search-input-wrap">
+          <input
+            v-model="keywordInput"
+            @input="onKeywordInput"
+            type="text"
+            class="search-input"
+            placeholder="搜索 meme_id、描述或标签"
+            aria-label="搜索表情包"
+          />
+        </div>
         <button class="ghost" @click="loadMemes" :disabled="loading">
           {{ loading ? '刷新中…' : '刷新' }}
         </button>
@@ -914,12 +1002,21 @@
           <div class="card-meta">
             <div class="muted">{{ item.record_count }} 条记录 · {{ item.file_exists ? '正常' : '异常' }}</div>
           </div>
+          <div
+            v-if="item.description"
+            class="card-description"
+            :title="item.description"
+          >{{ item.description }}</div>
           <div class="tag-list">
             <span class="tag" v-for="tag in item.tags" :key="item.meme_id + ':' + tag">{{ tag }}</span>
           </div>
           <div class="actions">
             <button class="primary" @click="openEditor(item)">编辑</button>
             <button class="danger" @click="removeItem(item)">删除</button>
+            <a
+              class="ghost download-btn"
+              :href="apiUrl('/image/' + encodeURIComponent(item.meme_id) + '?download=1')"
+            >下载</a>
           </div>
         </div>
       </article>
@@ -987,6 +1084,7 @@
           availableTags: [],
           syncInfo: null,
           keyword: '',
+          keywordInput: '',
           activeTag: '',
           editorOpen: false,
           editingItem: null,
@@ -998,6 +1096,7 @@
           loadError: '',
           operationMessage: '',
           viewMode: 'square',
+          _keywordTimer: null,
         };
       },
       computed: {
@@ -1092,9 +1191,17 @@
         },
         async reloadAll() {
           this.keyword = '';
+          this.keywordInput = '';
           this.activeTag = '';
           this.selectedIds = [];
           await this.loadMemes();
+        },
+        onKeywordInput(e) {
+          const value = e && e.target ? e.target.value : '';
+          window.clearTimeout(this._keywordTimer);
+          this._keywordTimer = window.setTimeout(() => {
+            this.keyword = (value || '').trim();
+          }, 220);
         },
         setActiveTag(tag) {
           this.activeTag = tag;
@@ -1232,14 +1339,6 @@
           } catch (error) {
             console.error(error);
             this._showOpMsg(`批量删除失败：${error.message || error}`, true);
-          }
-        },
-        async copyText(text) {
-          try {
-            await navigator.clipboard.writeText(text);
-            this._showOpMsg('✅ 已复制 ID');
-          } catch (error) {
-            this._showOpMsg('复制失败', true);
           }
         },
       },
