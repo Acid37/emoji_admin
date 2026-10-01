@@ -130,29 +130,23 @@ class EmojiAdminService(BaseService):
                 collection_name=self.collection_name,
                 limit=page_size,
                 offset=offset,
-                include=["metadatas", "embeddings"],
+                include=["metadatas"],
             )
             ids_raw = data.get("ids")
             metadatas_raw = data.get("metadatas")
-            embeddings_raw = data.get("embeddings")
             ids: list[str] = list(ids_raw) if ids_raw is not None else []
             metadatas: list[dict[str, Any]] = (
                 list(metadatas_raw) if metadatas_raw is not None else []
-            )
-            embeddings: list[list[float]] = (
-                list(embeddings_raw) if embeddings_raw is not None else []
             )
             if not ids:
                 break
 
             for index, record_id in enumerate(ids):
                 metadata = metadatas[index] if index < len(metadatas) else {}
-                embedding = embeddings[index] if index < len(embeddings) else []
                 rows.append(
                     {
                         "id": record_id,
                         "metadata": metadata,
-                        "embedding": embedding,
                     }
                 )
 
@@ -514,19 +508,19 @@ class EmojiAdminService(BaseService):
 
     async def update_meme(
         self, meme_id: str, description: str, tags: list[str]
-    ) -> bool:
+    ) -> dict[str, Any] | None:
         """更新表情包描述与标签。"""
 
         meme_id = self._normalize_text(meme_id)
         description = self._normalize_text(description)
         normalized_tags = self._normalize_tags(tags)
         if not meme_id or not description or not normalized_tags:
-            return False
+            return None
 
         vdb = self._vector_db()
         metadatas, embeddings = await self._get_meme_vector_data(meme_id)
         if not metadatas:
-            return False
+            return None
 
         old_meta = metadatas[0]
         old_description = self._normalize_text(old_meta.get("description"))
@@ -547,7 +541,7 @@ class EmojiAdminService(BaseService):
                 embedding = list(emb_resp.embeddings[0])
             except Exception as exc:
                 logger.warning(f"更新表情包 embedding 失败: {exc}")
-                return False
+                return None
         else:
             embedding = list(embeddings[0])
 
@@ -582,7 +576,17 @@ class EmojiAdminService(BaseService):
             documents=documents,
             metadatas=metadatas_to_add,
         )
-        return True
+        return self._record_to_dict(
+            EmojiRecord(
+                meme_id=meme_id,
+                description=description,
+                path=path_value,
+                tags=normalized_tags,
+                created_at=created_at,
+                record_count=len(normalized_tags),
+                file_exists=Path(path_value).exists() if path_value else False,
+            )
+        )
 
     async def get_preview_path(self, meme_id: str) -> Path | None:
         """获取可预览的图片路径。"""

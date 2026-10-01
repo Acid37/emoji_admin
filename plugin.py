@@ -18,8 +18,6 @@ class EmojiAdminPlugin(BasePlugin):
     """独立的表情包管理后台插件。"""
 
     plugin_name: str = "emoji_admin"
-    plugin_description: str = "表情包管理后台插件"
-    plugin_version: str = "1.0.0"
 
     configs: list[type] = []
     dependent_components: list[str] = []

@@ -1235,8 +1235,8 @@
           return this.editDescription !== this._originalDesc ||
                  JSON.stringify([...this.editTags].sort()) !== JSON.stringify([...this._originalTags].sort());
         },
-        closeEditor() {
-          if (this._isDirty()) {
+        closeEditor(showDiscardMessage = true) {
+          if (showDiscardMessage && this._isDirty()) {
             this._showOpMsg('修改已丢弃，未保存', true);
           }
           this.editorOpen = false;
@@ -1244,6 +1244,29 @@
           this.editDescription = '';
           this.editTags = [];
           this.customTagInput = '';
+        },
+        refreshAvailableTags() {
+          this.availableTags = [...new Set(
+            this.memes.flatMap((item) => Array.isArray(item.tags) ? item.tags : [])
+          )].sort();
+          if (this.activeTag && !this.availableTags.includes(this.activeTag)) {
+            this.activeTag = '';
+          }
+        },
+        replaceMeme(updatedMeme) {
+          const index = this.memes.findIndex((item) => item.meme_id === updatedMeme.meme_id);
+          if (index >= 0) {
+            this.memes.splice(index, 1, updatedMeme);
+          } else {
+            this.memes.unshift(updatedMeme);
+          }
+          this.refreshAvailableTags();
+        },
+        removeMemes(deletedIds) {
+          const deleted = new Set(Array.isArray(deletedIds) ? deletedIds : []);
+          this.memes = this.memes.filter((item) => !deleted.has(item.meme_id));
+          this.selectedIds = this.selectedIds.filter((memeId) => !deleted.has(memeId));
+          this.refreshAvailableTags();
         },
         _showOpMsg(msg, isError = false) {
           this.operationMessage = isError ? '❌ ' + msg : msg;
@@ -1295,8 +1318,12 @@
               const detail = await resp.text();
               throw new Error(detail || '保存失败');
             }
-            await this.loadMemes();
-            this.closeEditor();
+            const data = await resp.json();
+            if (!data.meme) {
+              throw new Error('保存成功，但响应中缺少更新后的表情包');
+            }
+            this.replaceMeme(data.meme);
+            this.closeEditor(false);
             this._showOpMsg('✅ 保存成功');
           } catch (error) {
             console.error(error);
@@ -1313,7 +1340,8 @@
               const detail = await resp.text();
               throw new Error(detail || '删除失败');
             }
-            await this.loadMemes();
+            const data = await resp.json();
+            this.removeMemes(data.deleted);
             this._showOpMsg('✅ 删除成功');
           } catch (error) {
             console.error(error);
@@ -1333,9 +1361,14 @@
               const detail = await resp.text();
               throw new Error(detail || '批量删除失败');
             }
-            this.selectedIds = [];
-            await this.loadMemes();
-            this._showOpMsg('✅ 批量删除成功');
+            const data = await resp.json();
+            this.removeMemes(data.deleted);
+            this.selectedIds = Array.isArray(data.failed) ? data.failed : [];
+            if (this.selectedIds.length) {
+              this._showOpMsg(`已删除 ${data.deleted.length} 个，${this.selectedIds.length} 个删除失败`, true);
+            } else {
+              this._showOpMsg('✅ 批量删除成功');
+            }
           } catch (error) {
             console.error(error);
             this._showOpMsg(`批量删除失败：${error.message || error}`, true);

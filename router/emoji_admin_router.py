@@ -121,14 +121,14 @@ class EmojiAdminRouter(BaseRouter):
         ) -> dict[str, Any]:
             """更新表情包的描述与标签。"""
 
-            ok = await self._get_service().update_meme(
+            meme = await self._get_service().update_meme(
                 meme_id=meme_id,
                 description=payload.description,
                 tags=payload.tags,
             )
-            if not ok:
+            if meme is None:
                 raise HTTPException(status_code=400, detail="更新失败")
-            return {"status": "ok"}
+            return {"status": "ok", "meme": meme}
 
         @self.app.delete("/api/memes/{meme_id}")
         async def delete_meme(meme_id: str) -> dict[str, Any]:
@@ -137,7 +137,7 @@ class EmojiAdminRouter(BaseRouter):
             ok = await self._get_service().delete_meme(meme_id)
             if not ok:
                 raise HTTPException(status_code=404, detail="表情包不存在或删除失败")
-            return {"status": "ok"}
+            return {"status": "ok", "deleted": [meme_id]}
 
         @self.app.delete("/api/memes")
         async def batch_delete_meme(payload: EmojiBatchDeletePayload) -> dict[str, Any]:
